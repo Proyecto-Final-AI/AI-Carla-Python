@@ -20,6 +20,11 @@ IM_WIDTH = 700
 IM_HEIGHT = 500
 
 
+def draw_lines(img,lines):
+    for line in lines:
+        coords = line[0]
+        cv2.line(img, (coords[0], coords[1]), (coords[2], coords[3]), [255,255,255], 3)
+
 def drive_zone(edges, vertices):
     mask = np.zeros_like(edges)
     cv2.fillPoly(mask, vertices,255)
@@ -37,12 +42,16 @@ def process_img(image):
     #Creación del edge y ejecucion
     edges = cv2.Canny(i3,200,300)
     
+    edges = cv2.GaussianBlur(edges,(5,5),0)
     vertices = np.array([ [0,500], [0,300], [200,200], [500,200], [700,300], [700,500],])
     process_img = drive_zone(edges,np.int32([vertices]))
     
-    cv2.imshow("Edges",process_img)  
-    cv2.waitKey(25)
-      
+    lines = cv2.HoughLinesP(process_img, 1, np.pi/180, 180, 20, 15)
+
+    draw_lines(process_img,lines)
+
+    cv2.imshow("Edges", process_img)
+    
     return i3/255.0
 
 lista_actores = []
