@@ -16,22 +16,33 @@ except IndexError:
 
 import carla
 
-IM_WIDTH = 640
-IM_HEIGHT = 480
+IM_WIDTH = 700
+IM_HEIGHT = 500
+
+
+def drive_zone(edges, vertices):
+    mask = np.zeros_like(edges)
+    cv2.fillPoly(mask, vertices,255)
+    masked = cv2.bitwise_and(edges,mask)
+    return masked
 
 # https://youtu.be/2hM44nr7Wms?t=1889
 def process_img(image):
+    image.convert(carla.ColorConverter.CityScapesPalette)  
     i = np.array(image.raw_data)
     i2 = i.reshape((IM_HEIGHT, IM_WIDTH, 4))
     # Array dónde guardamos los datos de la cámara en RGB, porque en realidad lo guarda en RGBA
     i3 = i2[:, :, :3]
-    cv2.imshow("Original", i3)
-    cv2.waitKey(1)
-    
-    edges = cv2.Canny(i3,100,200)
-    cv2.imshow('Edges',edges)
-    cv2.waitKey(1)
 
+    #Creación del edge y ejecucion
+    edges = cv2.Canny(i3,200,300)
+    
+    vertices = np.array([ [0,500], [0,300], [200,200], [500,200], [700,300], [700,500],])
+    process_img = drive_zone(edges,np.int32([vertices]))
+    
+    cv2.imshow("Edges",process_img)  
+    cv2.waitKey(25)
+      
     return i3/255.0
 
 lista_actores = []
@@ -61,7 +72,7 @@ try:
     lista_actores.append(coche)
 
     # Blueprint para la cámara
-    bp_camara = blueprint_library.find("sensor.camera.rgb")
+    bp_camara = blueprint_library.find("sensor.camera.semantic_segmentation")
     bp_camara.set_attribute("image_size_x", f"{IM_WIDTH}")
     bp_camara.set_attribute("image_size_y", f"{IM_HEIGHT}")
     bp_camara.set_attribute("fov", "110")
