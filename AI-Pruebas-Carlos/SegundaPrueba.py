@@ -63,7 +63,7 @@ def display_lines(image, lines):
     return line_image
 
 def region_of_interest(image):
-    polygons = np.array([[(200, 700), (1120, 700), (570, 250)]])
+    polygons = np.array([[(200, 700), (1120, 700), (630, 310)]])
     mask = np.zeros_like(image)
     cv2.fillPoly(mask, polygons, 255)
     masked_image = cv2.bitwise_and(image, mask)
