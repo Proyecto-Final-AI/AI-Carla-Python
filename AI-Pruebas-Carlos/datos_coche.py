@@ -82,6 +82,8 @@ class CarEnv:
         self.front_camera = i3
 
     def set_control(self, steer_mov, throttle, brake):
+        self.THROTTLE = throttle
+        self.BRAKE = brake
         self.vehicle.apply_control(carla.VehicleControl(throttle=throttle, steer=steer_mov+self.STEER_AMT, brake=brake))
 
     def get_kmh(self):
