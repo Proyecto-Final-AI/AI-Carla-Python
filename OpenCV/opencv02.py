@@ -58,8 +58,8 @@ lista_actores = []
 
 try:
     # Creamos el cliente
-    cliente = carla.Client('localhost', 2000)
-    cliente.set_timeout(5.0)
+    cliente = carla.Client('192.168.1.39', 555)
+    cliente.set_timeout(10.0)
     # Creamos el mundo
     world = cliente.get_world()
     # Recogemos la librería de blueprints
