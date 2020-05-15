@@ -40,6 +40,9 @@ class CarEnv:
         self.collision_hist = []
         self.actor_list = []
 
+        self.THROTTLE = 0.0
+        self.BRAKE = 0.0
+
         self.transform = random.choice(self.world.get_map().get_spawn_points())
         self.vehicle = self.world.spawn_actor(self.model_3, self.transform)
         self.actor_list.append(self.vehicle)
