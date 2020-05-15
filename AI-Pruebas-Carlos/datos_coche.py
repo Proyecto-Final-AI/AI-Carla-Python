@@ -23,6 +23,8 @@ IM_HEIGHT = 480
 class CarEnv:
     SHOW_CAM = SHOW_PREVIEW
     STEER_AMT = 1.0
+    THROTTLE = 0.0
+    BRAKE = 0.0
     im_width = IM_WIDTH
     im_height = IM_HEIGHT
     front_camera = None
@@ -52,7 +54,7 @@ class CarEnv:
         self.actor_list.append(self.sensor)
         self.sensor.listen(lambda data: self.process_img(data))
 
-        self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
+        self.vehicle.apply_control(carla.VehicleControl(throttle=self.THROTTLE, brake=self.BRAKE))
         time.sleep(4)
 
         colsensor = self.blueprint_library.find("sensor.other.collision")
@@ -63,7 +65,7 @@ class CarEnv:
         while self.front_camera is None:
             time.sleep(0.01)
 
-        self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
+        self.vehicle.apply_control(carla.VehicleControl(throttle=self.THROTTLE, brake=self.BRAKE))
 
         return self.front_camera
 
@@ -79,8 +81,8 @@ class CarEnv:
             cv2.waitKey(1)
         self.front_camera = i3
 
-    def set_control(self, steer_mov):
-        self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=steer_mov*self.STEER_AMT))
+    def set_control(self, steer_mov, throttle, brake):
+        self.vehicle.apply_control(carla.VehicleControl(throttle=throttle, steer=steer_mov+self.STEER_AMT, brake=brake))
 
     def get_kmh(self):
         v = self.vehicle.get_velocity()
