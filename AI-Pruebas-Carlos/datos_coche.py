@@ -38,6 +38,7 @@ class CarEnv:
 
     def reset(self):
         self.collision_hist = []
+        self.obstacle_hist = []
         self.actor_list = []
 
         self.THROTTLE = 0.0
@@ -65,6 +66,52 @@ class CarEnv:
         self.actor_list.append(self.colsensor)
         self.colsensor.listen(lambda event: self.collision_data(event))
 
+        ## Obstacle Sensors
+
+        frontal_transform = carla.Transform(carla.Location(x=2.5, y=0, z=0.5))
+        frontal_right_transform = carla.Transform(carla.Location(x=2.5, y=1, z=0.5), carla.Rotation(yaw=45))
+        frontal_left_transform = carla.Transform(carla.Location(x=2.5, y=-1, z=0.5), carla.Rotation(yaw=315))
+
+        central_right_transform = carla.Transform(carla.Location(x=0, y=1, z=0.5), carla.Rotation(yaw=90))
+        central_left_transform = carla.Transform(carla.Location(x=0, y=-1, z=0.5), carla.Rotation(yaw=270))
+
+        back_transform = carla.Transform(carla.Location(x=-2.5, y=0, z=0.5), carla.Rotation(yaw=180))
+        back_right_transform = carla.Transform(carla.Location(x=-2.5, y=1, z=0.5), carla.Rotation(yaw=135))
+        back_left_transform = carla.Transform(carla.Location(x=-2.5, y=-1, z=0.5), carla.Rotation(yaw=225))
+
+        self.obs_sensor = self.blueprint_library.find("sensor.other.obstacle")
+
+        self.obs_sensor_frontal = self.world.spawn_actor(self.obs_sensor, frontal_transform, attach_to=self.vehicle)
+        self.obs_sensor_frontal_right = self.world.spawn_actor(self.obs_sensor, frontal_right_transform, attach_to=self.vehicle)
+        self.obs_sensor_frontal_left = self.world.spawn_actor(self.obs_sensor, frontal_left_transform, attach_to=self.vehicle)
+        
+        self.obs_sensor_central_right = self.world.spawn_actor(self.obs_sensor, central_right_transform, attach_to=self.vehicle)
+        self.obs_sensor_central_left = self.world.spawn_actor(self.obs_sensor, central_left_transform, attach_to=self.vehicle)
+        
+        self.obs_sensor_back = self.world.spawn_actor(self.obs_sensor, back_transform, attach_to=self.vehicle)
+        self.obs_sensor_back_right = self.world.spawn_actor(self.obs_sensor, back_right_transform, attach_to=self.vehicle)
+        self.obs_sensor_back_left = self.world.spawn_actor(self.obs_sensor, back_left_transform, attach_to=self.vehicle)
+
+        self.actor_list.append(self.obs_sensor_frontal)
+        self.actor_list.append(self.obs_sensor_frontal_right)
+        self.actor_list.append(self.obs_sensor_frontal_left)
+        self.actor_list.append(self.obs_sensor_central_right)
+        self.actor_list.append(self.obs_sensor_central_left)
+        self.actor_list.append(self.obs_sensor_back)
+        self.actor_list.append(self.obs_sensor_back_right)
+        self.actor_list.append(self.obs_sensor_back_left)
+
+        self.obs_sensor_frontal.listen(lambda event: self.obstacle_data(event))
+        self.obs_sensor_frontal_right.listen(lambda event: self.obstacle_data(event))
+        self.obs_sensor_frontal_left.listen(lambda event: self.obstacle_data(event))
+        
+        self.obs_sensor_central_right.listen(lambda event: self.obstacle_data(event))
+        self.obs_sensor_central_left.listen(lambda event: self.obstacle_data(event))
+        
+        self.obs_sensor_back.listen(lambda event: self.obstacle_data(event))
+        self.obs_sensor_back_right.listen(lambda event: self.obstacle_data(event))
+        self.obs_sensor_back_left.listen(lambda event: self.obstacle_data(event))
+
         while self.front_camera is None:
             time.sleep(0.01)
 
@@ -74,6 +121,9 @@ class CarEnv:
 
     def collision_data(self, event):
         self.collision_hist.append(event)
+    
+    def obstacle_data(self, event):
+        self.obstacle_hist.append(event)
 
     def process_img(self, image):
         i = np.array(image.raw_data)
