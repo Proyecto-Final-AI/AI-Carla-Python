@@ -68,16 +68,16 @@ class CarEnv:
 
         ## Obstacle Sensors
 
-        frontal_transform = carla.Transform(carla.Location(x=2.5, y=0, z=0.5))
-        frontal_right_transform = carla.Transform(carla.Location(x=2.5, y=1, z=0.5), carla.Rotation(yaw=45))
-        frontal_left_transform = carla.Transform(carla.Location(x=2.5, y=-1, z=0.5), carla.Rotation(yaw=315))
+        frontal_transform = carla.Transform(carla.Location(x=2.5, y=0, z=1.5))
+        frontal_right_transform = carla.Transform(carla.Location(x=2.5, y=1, z=1.5), carla.Rotation(yaw=45))
+        frontal_left_transform = carla.Transform(carla.Location(x=2.5, y=-1, z=1.5), carla.Rotation(yaw=315))
 
-        central_right_transform = carla.Transform(carla.Location(x=0, y=1, z=0.5), carla.Rotation(yaw=90))
-        central_left_transform = carla.Transform(carla.Location(x=0, y=-1, z=0.5), carla.Rotation(yaw=270))
+        central_right_transform = carla.Transform(carla.Location(x=0, y=1, z=1.5), carla.Rotation(yaw=90))
+        central_left_transform = carla.Transform(carla.Location(x=0, y=-1, z=1.5), carla.Rotation(yaw=270))
 
-        back_transform = carla.Transform(carla.Location(x=-2.5, y=0, z=0.5), carla.Rotation(yaw=180))
-        back_right_transform = carla.Transform(carla.Location(x=-2.5, y=1, z=0.5), carla.Rotation(yaw=135))
-        back_left_transform = carla.Transform(carla.Location(x=-2.5, y=-1, z=0.5), carla.Rotation(yaw=225))
+        back_transform = carla.Transform(carla.Location(x=-2.5, y=0, z=1.5), carla.Rotation(yaw=180))
+        back_right_transform = carla.Transform(carla.Location(x=-2.5, y=1, z=1.5), carla.Rotation(yaw=135))
+        back_left_transform = carla.Transform(carla.Location(x=-2.5, y=-1, z=1.5), carla.Rotation(yaw=225))
 
         self.obs_sensor = self.blueprint_library.find("sensor.other.obstacle")
 
