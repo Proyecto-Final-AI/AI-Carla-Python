@@ -80,8 +80,11 @@ class CarEnv:
         back_left_transform = carla.Transform(carla.Location(x=-2.5, y=-1, z=1.5), carla.Rotation(yaw=225))
 
         self.obs_sensor = self.blueprint_library.find("sensor.other.obstacle")
+        self.obs_sensor_long = self.blueprint_library.find("sensor.other.obstacle")
+        self.obs_sensor_long.set_attribute("distance", "25")
 
         self.obs_sensor_frontal = self.world.spawn_actor(self.obs_sensor, frontal_transform, attach_to=self.vehicle)
+        self.obs_sensor_frontal_long = self.world.spawn_actor(self.obs_sensor_long, frontal_transform, attach_to=self.vehicle)
         self.obs_sensor_frontal_right = self.world.spawn_actor(self.obs_sensor, frontal_right_transform, attach_to=self.vehicle)
         self.obs_sensor_frontal_left = self.world.spawn_actor(self.obs_sensor, frontal_left_transform, attach_to=self.vehicle)
         
@@ -93,6 +96,7 @@ class CarEnv:
         self.obs_sensor_back_left = self.world.spawn_actor(self.obs_sensor, back_left_transform, attach_to=self.vehicle)
 
         self.actor_list.append(self.obs_sensor_frontal)
+        self.actor_list.append(self.obs_sensor_frontal_long)
         self.actor_list.append(self.obs_sensor_frontal_right)
         self.actor_list.append(self.obs_sensor_frontal_left)
         self.actor_list.append(self.obs_sensor_central_right)
@@ -102,6 +106,7 @@ class CarEnv:
         self.actor_list.append(self.obs_sensor_back_left)
 
         self.obs_sensor_frontal.listen(lambda event: self.obstacle_data(event))
+        self.obs_sensor_frontal_long.listen(lambda event: self.obstacle_data(event))
         self.obs_sensor_frontal_right.listen(lambda event: self.obstacle_data(event))
         self.obs_sensor_frontal_left.listen(lambda event: self.obstacle_data(event))
         
