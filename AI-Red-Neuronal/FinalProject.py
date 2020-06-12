@@ -72,8 +72,8 @@ EPSILON_DECAY = 0.95
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATE_EVERY = 10
-MEMORY_FRACTION = 0.4
 
+MEMORY_FRACTION = 0.4
 
 
 # Nuestra propia classe de TensorBoard para crear las 
@@ -112,7 +112,6 @@ class CarEnvironmet():
     show_cam = SHOW_CAM
     cam_width = CAM_WIDTH
     cam_height = CAM_HEIGHT
-    STEER_AMT = 1.0
 
     #Variables de acción al empezar ( aceleración y frenada consecutivamente )
     throttle = THROTTLE
@@ -127,16 +126,13 @@ class CarEnvironmet():
         self.points = 0
         #Definir el cliente con el que nos conectaremos a carla
         self.carla_client = carla.Client("localhost", 2000)
-        self.carla_client.set_timeout(5000)
+        self.carla_client = carla.set_timeout(5000)
         
-        self.im_width = CAM_WIDTH
-        self.im_height = CAM_HEIGHT
-        self.count_only_rigth = 0;
-        self.count_only_left = 0;
-        self.reward = -100
         #Definir el mundo donde va a crearse el coche
         #Hacemos que se cargue el mapa 6, si no es el actual se cambia
-        self.world = self.carla_client.get_world()
+        if (carla_client.get_world().get_map().name != "Town06"):
+            carla_client.load_world("Town06")
+        self.world = carla_client.get_world()
         
         #Variable que contiene todos los modelos de los objetos
         self.blueprint_library = self.world.get_blueprint_library()
@@ -174,16 +170,16 @@ class CarEnvironmet():
         #Creamos el sensor de la cámara en la parte frontal del coche
         self.rgb_cam = self.blueprint_library.find("sensor.camera.rgb") 
         #Definimos el ancho y largo de la cámara a parte del fov
-        self.rgb_cam.set_attribute("image_size_x", f"{self.im_width}")
-        self.rgb_cam.set_attribute("image_size_y", f"{self.im_height}")
-        self.rgb_cam.set_attribute("fov", f"110")
+        self.rgb.set_attribute("image_size_x", f"{self.cam_width}")
+        self.rgb.set_attribute("image_size_y", f"{self.cam_height}")
+        self.rgb.set_attribute("fov", f"110")
         #Punto de spawn de la cámara
         cam_spawn = carla.Transform(carla.Location(x=2.5, z=0.7))
         #Hacemos spawn de la cámara y la añadimos a la lista de actores
         self.cam = self.world.spawn_actor(self.rgb_cam, cam_spawn, attach_to=self.car)
         self.actor_list.append(self.cam)
         #Creamos una función Lamba que nos lleva a una función que nos procesa la imagen a través de los datos que nos pasa el sensor self.cam
-        self.cam.listen(lambda image: self.process_img(image))
+        self.sensor.listen(lambda image: self.process_image(image))
 
         #Creamos el sensor de colisiones
         collision_sensor = self.blueprint_library.find("sensor.other.collision")
@@ -306,42 +302,43 @@ class CarEnvironmet():
         
         #Ahora vamos a crear los steps para que el coche sepa lo que tiene que hacer si perdir ayuda a nadie        
         if action == 0:
-            self.car.apply_control(carla.VehicleControl(throttle=1.0, steer= 0))
+            self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer= 0))
             self.count_only_rigth = 0;
             self.count_only_left = 0;
         elif action == 1:
-            self.car.apply_control(carla.VehicleControl(throttle=0.0, steer= 0, brake=1.0))
+            self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, steer= 0, brake=1.0))
             self.count_only_rigth = 0;
             self.count_only_left = 0;
         elif action == 2:
-            self.car.apply_control(carla.VehicleControl(throttle=1.0, steer=-1*self.STEER_AMT))
+            self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1*self.STEER_AMT))
             self.count_only_rigth=self.count_only_rigth+1;
 
         elif action == 3:
-            self.car.apply_control(carla.VehicleControl(throttle=1.0, steer=-1*self.STEER_AMT))
+            self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1*self.STEER_AMT))
             self.count_only_left=self.count_only_left+1;
             
             
         if len(self.collision_hits) != 0:
             done = False
-            self.reward = self.reward - 100
-        else:
+            reward = reward - 100
+        elif:
             done: False
-            self.reward = self.reward + 1  
+            reward = reward + 1  
         
-        if self.count_only_rigth > 5:
-            self.reward = self.reward -100
+        if self.count_only_rigth > 20:
+            reward = reward -100
         
-        if self.count_only_left > 5:
-            self.reward = self.reward -100
+        if self.count_only_left > 20:
+            reward = reward -100
         
-        self.reward = self.reward + self.points
+        reward = reward + self.points
                 
         #Si el episodio ya ha durado el tiempo que le hemos puesto se acaba
         if self.episode_start + SECONDS_PER_EPISODE > time.time:
             done = True
+
         
-        return self.front_camera, self.reward, done, None 
+        return self.front_camera, reward, done, None 
 
 
 #Crearemos un agente el cual aprenda a través de aprendizage reforzado
@@ -372,17 +369,17 @@ class DQNAgent:
         #Variable que te dice cual és el episodio que se está haciendo que és el último que se ha loggeado y lo iniciamos a 0
         self.last_logget_episode = 0
         #Variable que marca si el entrenamiento ha empezado
-        self.training_initialized = False
+        self.training_initialize = False
         
     #Función para crear el modelo
     def create_model(self):
         #Creamos el modelo base
-        base_model = Xception(weights=None, include_top=False, input_shape=(CAM_HEIGHT, CAM_WIDTH,3))
+        base_model = Xception(weights=None, include_top=False, input_shape=(IM_HEIGHT, IM_WIDTH,3))
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
         
         #Layer en el que li dones un input i et retorna un output
-        predictions = Dense(3, activation="linear")(x)
+        pretidictions = Dense(3, activation="linear")(x)
         #Creamos el modelo final
         model = Model(inputs=base_model.input, outputs=predictions)
         model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=["accuracy"])
@@ -471,7 +468,7 @@ class DQNAgent:
 
 
     def train_in_loop(self):
-        X = np.random.uniform(size=(1, CAM_HEIGHT, CAM_WIDTH, 3)).astype(np.float32)
+        X = np.random.uniform(size=(1, IM_HEIGHT, IM_WIDTH, 3)).astype(np.float32)
         y = np.random.uniform(size=(1, 3)).astype(np.float32)
         with self.graph.as_default():
             session = backend.get_session()
@@ -509,7 +506,7 @@ if __name__ == '__main__':
 
     # Creamos el agente y el entorno
     agent = DQNAgent()
-    env = CarEnvironmet()
+    env = CarEnv()
 
 
     # Creamos y iniciamos el hilo de entrenamiento
@@ -534,7 +531,7 @@ if __name__ == '__main__':
         step = 1
 
         # Reseteamos el entorno
-        current_state = env.reset_car()
+        current_state = env.reset()
 
         # Reset del flag de acabar y actualizamos el tiempo en el que empieza
         done = False
@@ -588,14 +585,14 @@ if __name__ == '__main__':
             epsilon *= EPSILON_DECAY
             epsilon = max(MIN_EPSILON, epsilon)
 
-agent.terminate = True
-trainer_thread.join()
-session = backend.get_session()
-init = tf.compat.v1.global_variables_initializer()
-session.run(init)
-agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')    
-
+    agent.terminate = True
+    trainer_thread.join()
+    session = backend.get_session()
+    init = tf.compat.v1.global_variables_initializer()
+    session.run(init)
+    agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')    
     
+        
         
         
         
